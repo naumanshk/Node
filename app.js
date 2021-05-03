@@ -12,6 +12,7 @@ var app = express();
 
 
 var mongoose = require('mongoose');
+require('dotenv').config()
 
 
 create_db_connection();
@@ -94,27 +95,6 @@ const multer = require('multer');
 // });
 
 
-var storageCust = multer.diskStorage(
-  {
-      destination: '/uploads',
-      filename: function ( req, file, cb ) {
-          //req.body is empty...
-          //How could I get the new_file_name property sent from client here?
-          cb( null, file.originalname);
-      }
-  }
-);
-
-const uploadCust = multer({ storage: storageCust } );
-app.post('/upload/', uploadCust.single('photo'), (req, res,err) => {
-  console.log(req.file)
-  if(req.file) {
-      res.json(req.file)
-  }
-  else {console.log(err)};
-});
-
-
 
 // ────────────────────────────────────────────────────────────────────────────────
 // ────────────────────────────────────────────────────────────────────────────────
@@ -143,33 +123,25 @@ app.use(function (err, req, res, next) {
   res.render('error');
 });
 
-app.set('port', 4000);
-var server=app.listen(app.get('port'),function(){
-    console.log("see magic on port in function" + " "+server.address().port);
-    
-}); 
-
-module.exports = app;
-
-
-
-
-
-
-
-// DB Connection //
 
 function create_db_connection(uri) {
-  mongoose.connect("mongodb+srv://admin:admin@cluster0.lgwhe.mongodb.net/infini8?retryWrites=true&w=majority", { useNewUrlParser: "true" });
+  console.log(process.env.MONGODB_URI,)
+    mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: "true" });
+    
+    mongoose.connection.on("error", (err) => {
   
-  mongoose.connection.on("error", (err) => {
+      console.log("err", err);
+  
+    });
+  
+    mongoose.connection.on("connected", (err, res) => {
+      console.log("mongoose is connected");
+    });
+  
+  }
 
-    console.log("err", err);
+app.listen(process.env.PORT || 3003, () => {
+  console.log(`Example app listening at http://localhost}`)
+})
 
-  });
-
-  mongoose.connection.on("connected", (err, res) => {
-    console.log("mongoose is connected");
-  });
-
-}
+module.exports = app;
